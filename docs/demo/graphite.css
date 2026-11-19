@@ -1,0 +1,273 @@
+/* Graphite demo. Pinned, bottom bleed: the window sits one gutter in from the
+   top and sides of a quiet well and runs past the stage's bottom, so the
+   editor that opens on the right stays whole. */
+.gr {
+  & .ss-stage {
+    --gutter: 40px;
+    --gr-ink: #191f28;
+    --gr-ink-2: #333d4b;
+    --gr-ink-3: #4e5968;
+    --gr-ink-4: #8b95a1;
+    --gr-line: rgba(2, 32, 71, 0.06);
+    --gr-fill: rgba(2, 32, 71, 0.05);
+    --gr-navy: #122440;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--ss-well);
+  }
+
+  .gr-window {
+    position: absolute;
+    top: var(--gutter);
+    left: var(--gutter);
+    width: 680px;
+    height: 470px;
+    box-shadow: var(--ss-shadow-hero);
+  }
+
+  .gr-app {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    transition: opacity 0.22s ease;
+  }
+  .gr-app[data-fade] { opacity: 0; }
+
+  /* Top bar */
+  .gr-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    flex: none;
+    padding: 0 12px 0 10px;
+    border-bottom: 1px solid var(--gr-line);
+  }
+  .gr-iconbtn {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border-radius: 7px;
+    color: var(--gr-ink-4);
+  }
+  .gr-doc {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .gr-doc__name { font-weight: 600; color: var(--gr-ink-2); }
+  .gr-dirty {
+    padding: 0 7px;
+    border-radius: 100px;
+    background: rgba(49, 130, 246, 0.16);
+    color: #1b64da;
+    font-size: 10px;
+    line-height: 18px;
+    font-weight: 700;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    will-change: transform;
+  }
+  .gr-dirty[data-show] { opacity: 1; transform: none; }
+
+  .gr-top__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .gr-save {
+    display: inline-flex;
+    opacity: 0;
+    transform: scale(0.94);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    will-change: transform;
+  }
+  .gr-save[data-show] { opacity: 1; transform: none; }
+  .gr-seg { width: 104px; }
+  .gr-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 104px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px rgba(2, 32, 71, 0.1);
+    color: var(--gr-ink-4);
+  }
+
+  /* Body: table of contents, viewer, editor */
+  .gr-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .gr-toc {
+    width: 132px;
+    flex: none;
+    padding: 14px 8px;
+    border-right: 1px solid var(--gr-line);
+  }
+  .gr-toc__label { margin: 4px 8px 10px; }
+  .gr-toc__item {
+    display: flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    color: var(--gr-ink-3);
+  }
+  .gr-toc__item + .gr-toc__item { margin-top: 2px; }
+  .gr-toc__item--l2 { padding-left: 18px; }
+  .gr-toc__item[data-active] { background: rgba(0, 23, 51, 0.04); color: var(--gr-ink); font-weight: 600; }
+
+  .gr-viewer {
+    flex: 1;
+    min-width: 0;
+    padding: 18px 28px 0;
+    overflow: hidden;
+  }
+  .gr-crumbs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--gr-ink-4);
+  }
+  .gr-crumbs b { color: var(--gr-ink-2); font-weight: 700; }
+  .gr-h1 {
+    font-size: 23px;
+    line-height: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--gr-ink);
+    white-space: nowrap;
+  }
+  .gr-p {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 12px 0 0;
+  }
+  .gr-h2 {
+    margin: 22px 0 10px;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 700;
+    color: var(--gr-ink);
+  }
+  .gr-h2--quiet { margin-top: 18px; }
+  .gr-list { display: flex; flex-direction: column; }
+  .gr-todo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 26px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--gr-ink-2);
+    white-space: nowrap;
+  }
+  .gr-box {
+    display: grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    flex: none;
+    border-radius: 4px;
+    background: var(--ss-accent);
+    color: #fff;
+  }
+  .gr-code {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 16px 18px 40px;
+    border-radius: 10px;
+    background: var(--gr-navy);
+  }
+  .gr-code__bar { background: rgba(255, 255, 255, 0.22) !important; }
+  .gr-code__bar--b { background: rgba(255, 183, 77, 0.55) !important; }
+
+  /* The editor opens from the right edge; its contents keep their width and
+     are uncovered, never squeezed */
+  .gr-editor {
+    width: 0;
+    flex: none;
+    overflow: hidden;
+    background: #f9fafb;
+    border-left: 1px solid transparent;
+    transition: width 0.5s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.3s ease;
+  }
+  .gr-editor[data-open] { width: 262px; border-left-color: var(--gr-line); }
+  .gr-editor__inner {
+    width: 262px;
+    height: 100%;
+    padding: 10px 12px 0;
+  }
+  .gr-editor__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 24px;
+    margin-bottom: 8px;
+    padding: 0 2px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    color: var(--gr-ink-2);
+  }
+  .gr-kbd { font-size: 11px; font-weight: 500; color: var(--gr-ink-4); }
+  .gr-src {
+    height: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px rgba(2, 32, 71, 0.1);
+    font: 400 12px/20px ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--gr-ink-2);
+  }
+  .gr-ln {
+    display: flex;
+    align-items: center;
+    height: 20px;
+    white-space: pre;
+  }
+  .gr-ln--blank { height: 10px; }
+  .gr-caret {
+    display: inline-block;
+    width: 1.5px;
+    height: 15px;
+    margin-left: 1px;
+    background: var(--ss-accent);
+    animation: gr-blink 1s steps(1) infinite;
+  }
+  .gr-caret[data-typing] { animation: none; }
+
+  .gr-toast {
+    position: absolute;
+    top: 128px;
+    left: 50%;
+    translate: -50% 0;
+  }
+}
+
+@keyframes gr-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
