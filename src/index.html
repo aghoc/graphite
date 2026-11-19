@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko" class="no-anim">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Graphite</title>
+  <link rel="stylesheet" href="vendor/pretendard/pretendard.css" />
+  <!-- 디자인 토큰과 기본 부품 (앱 전용 규칙은 style.css에) -->
+  <link rel="stylesheet" href="ui.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <div id="app" class="no-doc">
+    <!-- 상단 바 (문서 모드 .t-dcnav, 60px) -->
+    <nav class="t-dcnav topbar" aria-label="도구 모음">
+      <button id="btn-toc" class="t-iconbtn t-iconbtn--sm" type="button" title="목차 (⌘\)" aria-label="목차 접기/펼치기">
+        <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
+      </button>
+      <span class="t-logo app-logo"><img src="logo.png" alt="" width="22" height="22" />Graphite</span>
+      <div class="doc-title">
+        <span class="doc-sep" aria-hidden="true">/</span>
+        <span id="doc-name" class="doc-name"></span>
+        <span id="dirty-badge" class="t-badge t-badge--blue dirty-badge">수정됨</span>
+      </div>
+
+      <div class="topbar-right">
+        <div id="mode-seg" class="t-seg t-seg--md mode-seg" role="tablist" aria-label="보기 모드">
+          <button id="seg-view" type="button" role="tab" aria-selected="true">보기</button>
+          <button id="seg-edit" type="button" role="tab" aria-selected="false">편집</button>
+        </div>
+        <button id="btn-save" class="t-btn t-btn--sm t-btn--primary save-btn" type="button">저장</button>
+        <button id="btn-search" class="t-box t-box--sm search-trigger" type="button" aria-label="문서에서 찾기">
+          <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span class="search-trigger__label">찾기</span>
+          <kbd class="kbd" data-mod>F</kbd>
+        </button>
+        <button id="btn-open" class="t-iconbtn t-iconbtn--sm" type="button" title="파일 열기 (⌘O)" aria-label="파일 열기">
+          <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- 목차 (문서 모드 .t-side, 236px) -->
+    <aside id="toc" class="t-side toc" aria-label="목차">
+      <span class="t-side__label">목차</span>
+      <nav id="toc-list" class="t-side__group toc-list"></nav>
+      <p class="toc-empty">제목이 없는 문서예요</p>
+    </aside>
+    <div id="toc-scrim" class="toc-scrim"></div>
+
+    <main class="main">
+      <!-- 빈 화면 -->
+      <section id="empty" class="empty">
+        <div class="empty__inner">
+          <img class="empty__logo" src="logo.png" alt="Graphite" width="72" height="72" />
+          <h1 class="empty__title">마크다운 파일을<br />끌어다 놓으세요</h1>
+          <p class="empty__sub">파일을 직접 골라서 열 수도 있어요</p>
+          <button id="btn-open-empty" class="t-btn t-btn--lg t-btn--primary empty__cta" type="button">파일 열기</button>
+          <dl class="shortcuts">
+            <div><dt>파일 열기</dt><dd><kbd class="kbd" data-mod>O</kbd></dd></div>
+            <div><dt>보기 ↔ 편집</dt><dd><kbd class="kbd" data-mod>E</kbd></dd></div>
+            <div><dt>저장</dt><dd><kbd class="kbd" data-mod>S</kbd></dd></div>
+            <div><dt>찾기</dt><dd><kbd class="kbd" data-mod>F</kbd></dd></div>
+            <div><dt>목차</dt><dd><kbd class="kbd" data-mod>\</kbd></dd></div>
+            <div><dt>글자 크기</dt><dd><kbd class="kbd" data-mod>+ − 0</kbd></dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- 뷰어 -->
+      <section id="viewer" class="viewer" tabindex="-1">
+        <div class="doc-wrap">
+          <nav id="crumbs" class="t-crumbs crumbs" aria-label="파일 위치"></nav>
+          <article id="content" class="t-doc markdown-body"></article>
+        </div>
+      </section>
+
+      <!-- 뷰어와 편집기 사이 크기 조절 막대 -->
+      <div id="splitter" class="splitter" role="separator" aria-orientation="vertical" aria-label="편집 창 너비 조절" tabindex="0"></div>
+
+      <!-- 편집기 (뷰어 오른쪽에 열림) -->
+      <section id="editor-wrap" class="editor-wrap" aria-label="원문 편집">
+        <div class="editor-col">
+          <div class="editor-head">
+            <span class="editor-title">원문 편집</span>
+            <span class="editor-hint"><kbd class="kbd" data-mod>S</kbd> 저장</span>
+            <button id="btn-edit-close" class="t-iconbtn t-iconbtn--sm" type="button" title="편집 창 닫기 (⌘E)" aria-label="편집 창 닫기">
+              <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+          </div>
+          <textarea id="editor" class="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="마크다운 원문"></textarea>
+        </div>
+      </section>
+
+      <!-- 찾기 -->
+      <div id="search" class="search" role="search">
+        <label class="t-box search__box">
+          <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="search-input" type="text" placeholder="문서에서 찾기" spellcheck="false" aria-label="찾을 내용" />
+          <span id="search-count" class="search__count"></span>
+        </label>
+        <button id="search-prev" class="t-iconbtn t-iconbtn--sm" type="button" title="이전 (Shift+Enter)" aria-label="이전 결과">
+          <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
+        </button>
+        <button id="search-next" class="t-iconbtn t-iconbtn--sm" type="button" title="다음 (Enter)" aria-label="다음 결과">
+          <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <button id="search-close" class="t-iconbtn t-iconbtn--sm" type="button" title="닫기 (Esc)" aria-label="찾기 닫기">
+          <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <!-- 외부 변경 알림 (콜아웃 형태로 아래에 띄움) -->
+      <div id="banner" class="t-callout t-callout--warn banner" role="alert">
+        <span class="t-callout__icon"><svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h0"/></svg></span>
+        <div class="t-callout__body banner__body">
+          <div class="banner__text"><strong>다른 곳에서 파일이 바뀌었어요</strong><span>편집 중인 내용은 그대로 두었어요.</span></div>
+          <div class="banner__actions">
+            <button id="banner-ignore" class="t-btn t-btn--sm" type="button">이대로 두기</button>
+            <button id="banner-reload" class="t-btn t-btn--sm t-btn--grey" type="button">새로 불러오기</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="toast" class="t-toast" role="status" hidden></div>
+
+    <!-- 드래그 앤 드롭 -->
+    <div id="drop" class="drop"><div class="drop__inner">
+      <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+      놓으면 바로 열어요
+    </div></div>
+  </div>
+</body>
+</html>
