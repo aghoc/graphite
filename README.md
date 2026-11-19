@@ -1,8 +1,15 @@
-# Graphite
+<p align="center">
+  <img src="src-tauri/icons/128x128@2x.png" width="128" height="128" alt="Graphite 로고">
+</p>
 
-`.md` 파일을 더블클릭하면 바로 열려서 깔끔하게 읽히는 macOS용 마크다운 뷰어. 필요할 때만 `⌘E`로 원문을 고친다.
+<h1 align="center">Graphite</h1>
 
-Tauri v2와 Rust로 만들었다. 설치본은 약 10MB이고, 네트워크에 접속하지 않는다.
+<p align="center">
+  <code>.md</code> 파일을 더블클릭하면 바로 열려서 깔끔하게 읽히는 macOS용 마크다운 뷰어.<br>
+  필요할 때만 <code>⌘E</code>로 원문을 고친다.
+</p>
+
+<p align="center">Tauri v2 · Rust · 설치본 약 10MB · 오프라인</p>
 
 ![문서를 읽다가 ⌘E로 원문 편집기를 열어 할 일을 추가하고 저장하는 모습](docs/images/demo.gif)
 
