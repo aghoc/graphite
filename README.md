@@ -1,4 +1,8 @@
-# Graphite
+<p align="center">
+  <img src="src-tauri/icons/128x128@2x.png" width="128" height="128" alt="Graphite 로고">
+</p>
+
+<h1 align="center">Graphite</h1>
 
 Graphite는 macOS에서 마크다운 파일을 읽는 앱입니다. 기본 앱으로 지정해 두면 Finder에서 `.md` 파일을 더블클릭해 바로 읽을 수 있습니다. 오타나 숫자 하나를 고칠 때는 `⌘E`를 눌러 오른쪽에 원문을 띄우고, `⌘S`로 같은 파일에 저장합니다.
 
@@ -64,4 +68,15 @@ cargo test
 
 Graphite 코드는 [MIT 라이선스](LICENSE)를 따릅니다.
 
-본문과 목차에 쓰는 토스페이스는 토스팀에서 제공한 이모지 글꼴입니다. 공식 v1.6.1의 WOFF2 파일을 사용하며, 글꼴을 재배포할 때는 저작권 안내와 라이선스 전문을 함께 넣어야 합니다. [토스페이스 저작권 안내 및 라이선스](licenses/tossface)
+| 라이브러리·글꼴 | 용도 | 라이선스 |
+| --- | --- | --- |
+| [Tauri](https://tauri.app) | 데스크톱 앱 프레임워크 | MIT / Apache-2.0 |
+| [comrak](https://github.com/kivikakk/comrak) | 마크다운 렌더링 | BSD-2-Clause |
+| [notify](https://github.com/notify-rs/notify) | 파일 변경 감지 | CC0-1.0 |
+| [KaTeX](https://katex.org) | 수식 렌더링 | MIT |
+| [Mermaid](https://mermaid.js.org) | 다이어그램 렌더링 | MIT |
+| [highlight.js](https://highlightjs.org) | 코드 강조 | BSD-3-Clause |
+| [Pretendard](https://github.com/orioncactus/pretendard) | 본문 글꼴 | SIL OFL 1.1 |
+| [토스페이스](https://github.com/toss/tossface) v1.6.1 | 이모지 글꼴 | [토스페이스 라이선스](licenses/tossface/LICENSE) |
+
+본문과 목차에는 토스팀에서 제공한 토스페이스를 사용합니다. Graphite는 공식 v1.6.1의 WOFF2 파일을 그대로 넣습니다. 토스페이스를 재배포할 때는 저작권 안내와 라이선스 전문을 함께 넣어야 하며, 글꼴 자체를 판매하거나 허락 없이 수정본을 만들 수 없습니다. Graphite는 빌드할 때 두 문서를 앱에 포함합니다. [저작권 안내](licenses/tossface/NOTICE.md) · [라이선스 전문](licenses/tossface/LICENSE)
