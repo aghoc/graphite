@@ -120,6 +120,7 @@ async function showHtml(html, { keepScroll = false } = {}) {
 
   fixImages();
   decorate();
+  emojify();
   const jobs = [renderMath(seq), renderMermaid(seq), highlightCode(seq)];
   buildToc();
   if (keepScroll) viewer.scrollTop = top;
@@ -180,6 +181,43 @@ function decorate() {
   content.querySelectorAll("ol[start]").forEach((ol) => {
     ol.style.counterReset = `s ${(parseInt(ol.getAttribute("start"), 10) || 1) - 1}`;
   });
+}
+
+/*
+ * 이모지를 span.emoji로 감싸 토스페이스로 그린다.
+ * 토스페이스 글꼴은 키캡 이모지(1️⃣) 때문에 숫자·#·*·©·®도 담고 있어, 본문 전체에 걸면 평범한 숫자까지 바뀐다.
+ * 그래서 실제 이모지 시퀀스(RGI_Emoji)만 골라 감싼다. 코드·수식·다이어그램 원문은 건드리지 않는다.
+ */
+const EMOJI_RE = (() => {
+  try { return new RegExp("\\p{RGI_Emoji}", "gv"); }
+  catch { return /(?:\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]{2})(?:\uFE0F|\u200D\p{Extended_Pictographic}\uFE0F?|[\u{1F3FB}-\u{1F3FF}])*/gu; }
+})();
+const MAYBE_EMOJI = /[\p{Extended_Pictographic}\u20E3\u{1F1E6}-\u{1F1FF}]/u;
+const NO_EMOJI_IN = "pre, code, .katex, [data-math-style], .mermaid-block, .emoji";
+function emojify(root = content) {
+  if (!MAYBE_EMOJI.test(root.textContent)) return; // 이모지 없는 문서는 바로 끝
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) => (MAYBE_EMOJI.test(n.nodeValue) && !n.parentElement?.closest(NO_EMOJI_IN)
+      ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const node of nodes) {
+    const text = node.nodeValue;
+    const frag = document.createDocumentFragment();
+    let last = 0;
+    for (const m of text.matchAll(EMOJI_RE)) {
+      frag.append(text.slice(last, m.index));
+      const span = document.createElement("span");
+      span.className = "emoji";
+      span.textContent = m[0];
+      frag.append(span);
+      last = m.index + m[0].length;
+    }
+    if (!last) continue;
+    frag.append(text.slice(last));
+    node.replaceWith(frag);
+  }
 }
 
 /** 렌더 단계에서 못 바꾼 이미지(HTML로 직접 쓴 <img>)를 asset URL로 바꾼다 */
@@ -349,6 +387,7 @@ function buildToc() {
     list.appendChild(a);
     tocLinks.push({ a, h });
   });
+  emojify(list); // 목차 글자는 제목의 textContent라 본문과 따로 감싼다
   $("toc").classList.toggle("is-empty", tocLinks.length === 0);
 }
 

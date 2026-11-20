@@ -225,6 +225,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .markdown-body .footnotes ol > li { margin-bottom: 4px; }
 .markdown-body .footnote-ref a { font-weight: 600; }
 
+/* 이모지: 토스페이스 (없는 글자는 원래 글꼴로) */
+.markdown-body .emoji, .toc-list .emoji { font-family: "Tossface", var(--font); font-style: normal; font-weight: 400; }
+
 /* 찾기 하이라이트 */
 mark.hit { background: color-mix(in srgb, var(--yellow-300) 45%, transparent); color: inherit; border-radius: 3px; }
 mark.hit.current { background: var(--yellow-300); color: var(--grey-900); }
