@@ -2,6 +2,7 @@
 //!
 //! - CLI 인자 / macOS 파일 열기 이벤트로 받은 경로를 바로 렌더링
 //! - comrak으로 GFM + 수식 파싱, 상대 경로 이미지를 asset:// URL로 바꿈
+//! - 파일 탐색기: 고른 폴더를 한 단계씩 읽고(폴더·마크다운만), 새 .md 파일을 만든다
 //! - notify로 열린 파일만 감시. 편집 중(또는 저장 안 한 변경이 있음)이면
 //!   내용을 덮어쓰지 않고 `file-conflict` 이벤트만 보낸다.
 
@@ -258,6 +259,79 @@ fn handle_change(app: &AppHandle, target: &Path) {
     let _ = app.emit("file-reloaded", make_doc(app, target, raw));
 }
 
+// ───────────────────────── 파일 탐색기 ─────────────────────────
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Entry {
+    name: String,
+    path: String,
+    is_dir: bool,
+}
+
+/// 폴더 한 단계만 읽는다 (하위 폴더는 펼칠 때 따로 부른다).
+/// 숨김 파일은 빼고, 폴더와 마크다운 파일만 돌려준다. 폴더 먼저, 이름순.
+#[tauri::command]
+fn list_dir(path: String) -> Result<Vec<Entry>, String> {
+    let dir = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|_| format!("폴더를 찾지 못했어요: {path}"))?;
+    let rd = fs::read_dir(&dir).map_err(|e| format!("폴더를 읽지 못했어요: {e}"))?;
+    let mut out: Vec<Entry> = rd
+        .filter_map(Result::ok)
+        .filter_map(|e| {
+            let name = e.file_name().to_string_lossy().into_owned();
+            if name.starts_with('.') {
+                return None;
+            }
+            let p = e.path();
+            // 심볼릭 링크는 가리키는 대상 기준으로 판단
+            let is_dir = p.is_dir();
+            if !is_dir && !(p.is_file() && is_markdown_path(&p)) {
+                return None;
+            }
+            Some(Entry { name, path: p.to_string_lossy().into_owned(), is_dir })
+        })
+        .collect();
+    out.sort_by(|a, b| {
+        b.is_dir
+            .cmp(&a.is_dir)
+            .then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+    });
+    Ok(out)
+}
+
+/// 새 마크다운 파일을 빈 내용으로 만든다. 확장자가 없으면 .md를 붙이고, 이미 있으면 덮어쓰지 않는다.
+#[tauri::command]
+fn create_file(dir: String, name: String) -> Result<String, String> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Err("파일 이름을 입력해 주세요.".into());
+    }
+    if name.contains(['/', '\\']) || name == "." || name == ".." {
+        return Err("파일 이름에 / 는 쓸 수 없어요.".into());
+    }
+    let dir = PathBuf::from(&dir)
+        .canonicalize()
+        .map_err(|_| format!("폴더를 찾지 못했어요: {dir}"))?;
+    if !dir.is_dir() {
+        return Err("폴더 안에만 만들 수 있어요.".into());
+    }
+    let mut p = dir.join(name);
+    if !is_markdown_path(&p) {
+        p = dir.join(format!("{name}.md"));
+    }
+    fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&p)
+        .map_err(|e| match e.kind() {
+            std::io::ErrorKind::AlreadyExists => "같은 이름의 파일이 이미 있어요.".to_string(),
+            _ => format!("파일을 만들지 못했어요: {e}"),
+        })?;
+    Ok(p.to_string_lossy().into_owned())
+}
+
 // ───────────────────────── 커맨드 ─────────────────────────
 
 #[tauri::command]
@@ -378,6 +452,8 @@ pub fn run() {
             set_guard,
             resolve_asset,
             is_markdown,
+            list_dir,
+            create_file,
             dev_log
         ])
         .build(tauri::generate_context!())
@@ -411,6 +487,28 @@ mod tests {
         assert!(html.contains(r#"<h1 data-sourcepos="1:1-1:8">"#));
         assert!(html.contains("data-math-style"));
         assert!(html.contains("asset://localhost/./assets/a.png"));
+    }
+
+    #[test]
+    fn explorer_lists_and_creates() {
+        let root = std::env::temp_dir().join(format!("graphite-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("b폴더")).unwrap();
+        fs::create_dir_all(root.join(".git")).unwrap();
+        fs::write(root.join("Z.md"), "").unwrap();
+        fs::write(root.join("a.markdown"), "").unwrap();
+        fs::write(root.join("사진.png"), "").unwrap();
+        let dir = root.to_string_lossy().into_owned();
+
+        let names: Vec<_> = list_dir(dir.clone()).unwrap().into_iter().map(|e| e.name).collect();
+        assert_eq!(names, ["b폴더", "a.markdown", "Z.md"]); // 폴더 먼저, 숨김·이미지 제외
+
+        let made = create_file(dir.clone(), "새 문서".into()).unwrap();
+        assert!(made.ends_with("새 문서.md") && Path::new(&made).is_file());
+        assert!(create_file(dir.clone(), "새 문서.md".into()).is_err()); // 덮어쓰지 않음
+        assert!(create_file(dir.clone(), "../밖".into()).is_err());
+        assert!(create_file(dir.clone(), "  ".into()).is_err());
+        let _ = fs::remove_dir_all(&root);
     }
 }
 
