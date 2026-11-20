@@ -1127,16 +1127,50 @@ $("search-close").addEventListener("click", () => search.close());
 
 // ───────────────────────── 글자 크기 ─────────────────────────
 
-const FONT_BASE = 16, FONT_MIN = 11, FONT_MAX = 30;
-let fontSize = store.get("fontSize", FONT_BASE);
-function setFont(px) {
+// FONT_BASE: 본문 CSS가 기준으로 삼는 크기(zoom 1배), FONT_DEFAULT: 처음 열 때 쓰는 크기
+const FONT_BASE = 16, FONT_DEFAULT = 15, FONT_MIN = 11, FONT_MAX = 30;
+// 예전 판은 켤 때마다 "fontSize"에 16을 저장했다. 16이 아닌 값만 사용자가 고른 크기로 보고 옮겨 온다.
+const legacyFont = store.get("fontSize", null);
+let fontSize = store.get("fontPx", legacyFont && legacyFont !== FONT_BASE ? legacyFont : FONT_DEFAULT);
+function setFont(px, { remember = true } = {}) {
   fontSize = Math.min(FONT_MAX, Math.max(FONT_MIN, px));
   // 문서 본문 글자는 px 고정값이라 크기는 본문 영역 zoom으로 바꾼다 (16px = 1배)
   document.documentElement.style.setProperty("--doc-zoom", String(fontSize / FONT_BASE));
   invalidateViewMap();
   invalidateEditMap();
-  store.set("fontSize", fontSize);
+  if (remember) store.set("fontPx", fontSize);
+  fontUi.sync();
 }
+
+// 상단 바의 글자 크기 버튼: 누르면 작게·크게·슬라이더·기본 크기 버튼이 뜬다
+const fontUi = {
+  btn: $("btn-font"),
+  pop: $("font-pop"),
+  range: $("font-range"),
+  sync() {
+    $("font-value").textContent = `${fontSize}px`;
+    this.range.value = String(fontSize);
+    $("font-dec").disabled = fontSize <= FONT_MIN;
+    $("font-inc").disabled = fontSize >= FONT_MAX;
+    $("font-reset").disabled = fontSize === FONT_DEFAULT;
+  },
+  toggle(open = this.pop.hidden) {
+    this.pop.hidden = !open;
+    this.btn.setAttribute("aria-expanded", String(open));
+    if (open) this.range.focus();
+  },
+};
+fontUi.btn.addEventListener("click", (e) => { e.stopPropagation(); fontUi.toggle(); });
+fontUi.range.addEventListener("input", () => setFont(+fontUi.range.value));
+$("font-dec").addEventListener("click", () => setFont(fontSize - 1));
+$("font-inc").addEventListener("click", () => setFont(fontSize + 1));
+$("font-reset").addEventListener("click", () => setFont(FONT_DEFAULT));
+document.addEventListener("pointerdown", (e) => {
+  if (!fontUi.pop.hidden && !e.target.closest(".font-ctl")) fontUi.toggle(false);
+});
+fontUi.pop.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fontUi.toggle(false); fontUi.btn.focus(); }
+});
 
 // ───────────────────────── 링크 ─────────────────────────
 
@@ -1179,7 +1213,7 @@ document.addEventListener("keydown", (e) => {
     case "Backslash": e.preventDefault(); if (state.doc || files.root) setTocOpen(app.classList.contains("toc-hidden")); break;
     case "Equal": case "NumpadAdd": e.preventDefault(); setFont(fontSize + 1); break;
     case "Minus": case "NumpadSubtract": e.preventDefault(); setFont(fontSize - 1); break;
-    case "Digit0": case "Numpad0": e.preventDefault(); setFont(FONT_BASE); toast("글자 크기를 처음으로 돌렸어요"); break;
+    case "Digit0": case "Numpad0": e.preventDefault(); setFont(FONT_DEFAULT); toast("글자 크기를 처음으로 돌렸어요"); break;
   }
 });
 
@@ -1204,7 +1238,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
 // ───────────────────────── Tauri 연동 ─────────────────────────
 
 async function boot() {
-  setFont(fontSize);
+  setFont(fontSize, { remember: false });
   setTocOpen(isNarrow() ? false : store.get("tocOpen", true), { remember: false });
   updateChrome();
   files.refresh();

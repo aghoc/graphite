@@ -274,6 +274,18 @@ mark.hit.current { background: var(--yellow-300); color: var(--grey-900); }
 
 .t-toast[hidden] { display: none; }
 
+/* ───────────── 글자 크기 ───────────── */
+.font-ctl { position: relative; }
+.font-pop { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; display: flex; flex-direction: column; gap: 12px; animation: t-fade .15s; }
+.font-pop[hidden] { display: none; }
+.font-pop__head { display: flex; align-items: baseline; justify-content: space-between; }
+.font-pop__head strong { font-size: 15px; color: var(--text-2); }
+.font-pop__value { font-size: 14px; font-weight: 600; color: var(--accent-fg); font-variant-numeric: tabular-nums; }
+.font-pop__row { display: flex; align-items: center; gap: 10px; }
+.font-pop__row .t-iconbtn { flex: none; }
+.font-range { flex: 1; min-width: 0; accent-color: var(--accent); }
+.font-pop__reset { width: 100%; gap: 8px; }
+.font-pop__reset:disabled { opacity: .5; cursor: default; }
 
 /* ───────────── 빈 화면 ───────────── */
 .empty { align-items: center; justify-content: center; padding: 40px 24px; overflow-y: auto; }

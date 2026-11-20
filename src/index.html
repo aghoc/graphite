@@ -35,6 +35,27 @@
           <span class="search-trigger__label">찾기</span>
           <kbd class="kbd" data-mod>F</kbd>
         </button>
+        <div class="font-ctl">
+          <button id="btn-font" class="t-iconbtn t-iconbtn--sm" type="button" title="글자 크기" aria-label="글자 크기" aria-haspopup="dialog" aria-expanded="false" aria-controls="font-pop">
+            <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19 8.5 5h1L15 19M5 14.5h7"/><path d="M15.5 19l3-8h1l3 8M16.4 16.5h5.2"/></svg>
+          </button>
+          <div id="font-pop" class="t-popover font-pop" role="dialog" aria-label="글자 크기" hidden>
+            <div class="font-pop__head">
+              <strong>글자 크기</strong>
+              <span id="font-value" class="font-pop__value"></span>
+            </div>
+            <div class="font-pop__row">
+              <button id="font-dec" class="t-iconbtn t-iconbtn--sm t-iconbtn--fill" type="button" title="작게 (⌘−)" aria-label="글자 작게">
+                <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>
+              </button>
+              <input id="font-range" class="font-range" type="range" min="11" max="30" step="1" aria-label="글자 크기" />
+              <button id="font-inc" class="t-iconbtn t-iconbtn--sm t-iconbtn--fill" type="button" title="크게 (⌘+)" aria-label="글자 크게">
+                <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+            </div>
+            <button id="font-reset" class="t-btn t-btn--sm t-btn--grey font-pop__reset" type="button">기본 크기로 <kbd class="kbd" data-mod>0</kbd></button>
+          </div>
+        </div>
         <button id="btn-open" class="t-iconbtn t-iconbtn--sm" type="button" title="파일 열기 (⌘O)" aria-label="파일 열기">
           <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
         </button>
