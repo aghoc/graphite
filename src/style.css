@@ -37,7 +37,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .search-trigger .t-ico { width: 16px; height: 16px; }
 .search-trigger__label { flex: 1; text-align: left; }
 .search-trigger:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
-#app.no-doc .mode-seg, #app.no-doc .search-trigger, #app.no-doc #btn-toc { display: none; }
+#app.no-doc .mode-seg, #app.no-doc .search-trigger { display: none; }
+#app.no-doc:not(.has-folder) #btn-toc { display: none; }
 
 /* ───────────── 목차 사이드바 ───────────── */
 .toc { top: var(--nav-h); transition: transform .25s var(--ease-reveal); }
@@ -51,12 +52,57 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .toc-list a[aria-current=page] { color: var(--text-field); }
 .toc-empty { display: none; padding: 5px 12px; font-size: 14px; line-height: 20px; color: var(--text-5); }
 .toc.is-empty .toc-empty { display: block; }
-#app.toc-hidden .toc, #app.no-doc .toc { transform: translateX(-100%); }
+#app.toc-hidden .toc, #app.no-doc:not(.has-folder) .toc { transform: translateX(-100%); }
+
+/* 사이드바 탭: 파일 / 목차 */
+.toc { display: flex; flex-direction: column; padding-top: 12px; }
+.side-tabs { flex: none; margin: 0 4px 8px 0; }
+.side-pane { display: none; flex: 1; min-height: 0; flex-direction: column; }
+#app[data-side=files] #pane-files, #app[data-side=toc] #pane-toc { display: flex; }
+#app.no-doc .side-tabs { display: none; } /* 문서가 없으면 목차가 없으니 탭도 숨긴다 */
+
+/* ───────────── 파일 탐색기 ───────────── */
+.files-head { display: flex; align-items: center; gap: 0; min-height: 36px; margin: 0 0 4px; padding-left: 4px; }
+.files-root { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 20px; font-weight: 700; color: var(--text-4); }
+.files-head .t-iconbtn { width: 28px; height: 28px; flex: none; }
+.files-head .t-ico { width: 17px; height: 17px; }
+.files:not(.has-root) .files-head, .files:not(.has-root) .files-tree { display: none; }
+.files-empty { display: none; padding: 8px 4px; }
+.files:not(.has-root) .files-empty { display: block; }
+.files-empty p { margin: 0 0 12px; font-size: 14px; line-height: 21px; color: var(--text-5); word-break: keep-all; }
+
+.files-tree { display: flex; flex-direction: column; gap: 1px; padding-bottom: 8px; }
+.tree-group { display: flex; flex-direction: column; gap: 1px; }
+.tree-item { position: relative; }
+.tree-row {
+  display: flex; align-items: center; gap: 6px; width: 100%; min-height: 32px;
+  padding: 6px 8px 6px calc(6px + var(--depth, 0) * 14px); border-radius: calc(8px * var(--rk));
+  font-size: 14px; line-height: 20px; font-weight: 500; color: var(--text-3); text-align: left; transition: background .15s;
+}
+.tree-row:hover { background: var(--fill-100); }
+.tree-row[aria-current=page] { background: var(--accent-weak); color: var(--accent-fg); font-weight: 600; }
+.tree-row .t-ico { flex: none; width: 16px; height: 16px; color: var(--text-5); }
+.tree-row[aria-current=page] .t-ico { color: var(--accent-fg); }
+.tree-row .chev { width: 14px; height: 14px; transition: transform .15s; }
+.tree-row[aria-expanded=true] .chev { transform: rotate(90deg); }
+.tree-row--file { padding-left: calc(26px + var(--depth, 0) * 14px); }
+.tree-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-row--dir .tree-name { padding-right: 26px; }
+/* 폴더 줄에 올리면 그 폴더에 새 파일을 만드는 + 버튼 */
+.tree-add { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; opacity: 0; }
+.tree-add .t-ico { width: 15px; height: 15px; }
+.tree-item:hover > .tree-add, .tree-add:focus-visible { opacity: 1; }
+.tree-msg { padding: 6px 8px 6px calc(26px + var(--depth, 0) * 14px); font-size: 13px; line-height: 20px; color: var(--text-5); }
+/* 새 파일 이름 입력 줄 */
+.tree-new { display: flex; align-items: center; gap: 6px; padding: 3px 4px 3px calc(26px + var(--depth, 0) * 14px); }
+.tree-new .t-ico { flex: none; width: 16px; height: 16px; color: var(--accent-fg); }
+.tree-new .t-box { min-height: 28px; padding: 0 8px; }
+.tree-new input { height: 26px; font-size: 14px; }
 .toc-scrim { display: none; }
 
 /* ───────────── 본문 영역 ───────────── */
 .main { position: fixed; top: var(--nav-h); left: var(--side-w); right: 0; bottom: 0; transition: left .25s var(--ease-reveal); }
-#app.toc-hidden .main, #app.no-doc .main { left: 0; }
+#app.toc-hidden .main, #app.no-doc:not(.has-folder) .main { left: 0; }
 .viewer, .editor-wrap, .empty { position: absolute; inset: 0; }
 .viewer { overflow-y: auto; outline: none; }
 .editor-wrap, .empty { display: none; }
@@ -179,6 +225,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .markdown-body .footnotes ol > li { margin-bottom: 4px; }
 .markdown-body .footnote-ref a { font-weight: 600; }
 
+/* 이모지: 토스페이스 (없는 글자는 원래 글꼴로) */
+.markdown-body .emoji, .toc-list .emoji { font-family: "Tossface", var(--font); font-style: normal; font-weight: 400; }
+
 /* 찾기 하이라이트 */
 mark.hit { background: color-mix(in srgb, var(--yellow-300) 45%, transparent); color: inherit; border-radius: 3px; }
 mark.hit.current { background: var(--yellow-300); color: var(--grey-900); }
@@ -228,13 +277,27 @@ mark.hit.current { background: var(--yellow-300); color: var(--grey-900); }
 
 .t-toast[hidden] { display: none; }
 
+/* ───────────── 글자 크기 ───────────── */
+.font-ctl { position: relative; }
+.font-pop { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; display: flex; flex-direction: column; gap: 12px; animation: t-fade .15s; }
+.font-pop[hidden] { display: none; }
+.font-pop__head { display: flex; align-items: baseline; justify-content: space-between; }
+.font-pop__head strong { font-size: 15px; color: var(--text-2); }
+.font-pop__value { font-size: 14px; font-weight: 600; color: var(--accent-fg); font-variant-numeric: tabular-nums; }
+.font-pop__row { display: flex; align-items: center; gap: 10px; }
+.font-pop__row .t-iconbtn { flex: none; }
+.font-range { flex: 1; min-width: 0; accent-color: var(--accent); }
+.font-pop__reset { width: 100%; gap: 8px; }
+.font-pop__reset:disabled { opacity: .5; cursor: default; }
+
 /* ───────────── 빈 화면 ───────────── */
 .empty { align-items: center; justify-content: center; padding: 40px 24px; overflow-y: auto; }
 .empty__inner { width: 100%; max-width: 420px; text-align: center; }
 .empty__logo { display: block; margin: 0 auto; width: 72px; height: 72px; }
 .empty__title { margin: 20px 0 8px; font-size: 28px; line-height: 36.4px; font-weight: 700; color: var(--text-1); }
 .empty__sub { margin: 0 0 28px; font-size: 16px; line-height: 25.6px; color: var(--text-4); }
-.empty__cta { min-width: 220px; }
+.empty__ctas { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.empty__cta { min-width: 150px; }
 .shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin: 40px 0 0; padding: 16px 20px; border-radius: calc(16px * var(--rk)); background: var(--surface-2); text-align: left; }
 .shortcuts div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .shortcuts dt { font-size: 14px; line-height: 22px; color: var(--text-3); }
@@ -264,7 +327,7 @@ mark.hit.current { background: var(--yellow-300); color: var(--grey-900); }
   .main, #app.toc-hidden .main { left: 0; }
   .toc { top: var(--nav-h); }
   .toc:not([data-open=true]) { box-shadow: none; visibility: hidden; }
-  #app:not(.toc-hidden):not(.no-doc) .toc-scrim { display: block; position: fixed; inset: var(--nav-h) 0 0 0; z-index: 40; background: var(--overlay); }
+  #app:not(.toc-hidden):not(.no-doc) .toc-scrim, #app.has-folder:not(.toc-hidden) .toc-scrim { display: block; position: fixed; inset: var(--nav-h) 0 0 0; z-index: 40; background: var(--overlay); }
   .doc-wrap, #app.toc-hidden .doc-wrap { padding: 24px 20px 80px; }
   /* 좁은 창에서는 나란히 둘 자리가 없어 편집기만 보인다 */
   #app.editing .viewer, #app.editing .splitter { display: none; }
