@@ -1,0 +1,116 @@
+name: Build installers
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.artifact }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            target: aarch64-apple-darwin
+            bundle: dmg
+            artifact: macos-arm64
+            pattern: dmg/*.dmg
+          - runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundle: nsis
+            artifact: windows-x64
+            pattern: nsis/*-setup.exe
+          - runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            bundle: appimage
+            artifact: linux-x64
+            pattern: appimage/*.AppImage
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils xvfb x11-utils
+
+      - name: Select the Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - run: npm ci
+
+      - name: Build installer
+        env:
+          APPLE_SIGNING_IDENTITY: '-'
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+        run: npm run build -- --ci --target ${{ matrix.target }} --bundles ${{ matrix.bundle }} -- --locked
+
+      - name: Verify the macOS disk image
+        if: runner.os == 'macOS'
+        run: |
+          dmg=(src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg)
+          mount="$RUNNER_TEMP/graphite-dmg"
+          mkdir "$mount"
+          hdiutil attach "${dmg[0]}" -readonly -nobrowse -mountpoint "$mount"
+          trap 'hdiutil detach "$mount"' EXIT
+          app="$mount/Graphite.app"
+          test "$(lipo -archs "$app/Contents/MacOS/graphite")" = arm64
+          codesign --verify --deep --strict "$app"
+          test -f "$app/Contents/Resources/LICENSE"
+          test -f "$app/Contents/Resources/licenses/tossface/NOTICE.md"
+
+      - name: Open the sample on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Get-Item src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*-setup.exe
+          $destination = Join-Path $env:RUNNER_TEMP 'graphite-smoke'
+          $install = Start-Process $installer.FullName -ArgumentList "/S /D=$destination" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Installer exited with $($install.ExitCode)" }
+          $sample = (Resolve-Path docs/sample.md).Path
+          $app = Start-Process (Join-Path $destination 'graphite.exe') -ArgumentList "`"$sample`"" -PassThru
+          try {
+            for ($attempt = 0; $attempt -lt 30; $attempt++) {
+              $app.Refresh()
+              if ($app.HasExited) { throw "Graphite exited with $($app.ExitCode)" }
+              if ($app.MainWindowTitle -like '*sample.md*') { return }
+              Start-Sleep -Seconds 1
+            }
+            throw "The sample document did not open. Window title: $($app.MainWindowTitle)"
+          } finally {
+            Stop-Process -Id $app.Id -ErrorAction SilentlyContinue
+          }
+
+      - name: Open the sample on Linux
+        if: runner.os == 'Linux'
+        run: |
+          image=(src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage)
+          xvfb-run -a bash -euo pipefail -c '
+            APPIMAGE_EXTRACT_AND_RUN=1 "$1" "$PWD/docs/sample.md" &
+            app_pid=$!
+            trap "kill $app_pid 2>/dev/null || true" EXIT
+            for ((attempt = 0; attempt < 30; attempt++)); do
+              if [[ $(xwininfo -root -tree) == *sample.md* ]]; then exit 0; fi
+              kill -0 "$app_pid"
+              sleep 1
+            done
+            echo "The sample document did not open" >&2
+            exit 1
+          ' _ "${image[0]}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/${{ matrix.pattern }}
+          if-no-files-found: error
+          compression-level: 0
