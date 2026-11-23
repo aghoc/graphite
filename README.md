@@ -12,6 +12,20 @@ Graphite는 macOS 내장 웹뷰를 쓰는 마크다운 뷰어입니다. 기본 �
 
 ## 설치
 
+[GitHub Releases에서 최신 버전을 다운로드합니다.](https://github.com/aghoc/graphite/releases/latest)
+
+| 운영체제 | 받는 파일 | 설치 방법 |
+| --- | --- | --- |
+| macOS (Apple Silicon) | [.dmg 다운로드](https://github.com/aghoc/graphite/releases/download/v0.1.0/Graphite_0.1.0_aarch64.dmg) | 디스크 이미지를 열고 Graphite를 응용 프로그램 폴더로 옮깁니다. |
+| Windows (x64) | [.exe 다운로드](https://github.com/aghoc/graphite/releases/download/v0.1.0/Graphite_0.1.0_x64-setup.exe) | 설치 프로그램을 실행합니다. |
+| Linux (x64) | [.AppImage 다운로드](https://github.com/aghoc/graphite/releases/download/v0.1.0/Graphite_0.1.0_amd64.AppImage) | 파일에 실행 권한을 준 뒤 실행합니다. |
+
+첫 실행과 관련된 안내는 릴리스 페이지에서 확인할 수 있습니다.
+
+macOS에서 Graphite를 기본 앱으로 지정하려면 Finder에서 `.md` 파일의 **정보 가져오기**를 엽니다. **다음으로 열기**에서 Graphite를 선택하고 **모두 변경**을 누릅니다.
+
+### 소스에서 빌드
+
 macOS에서 소스를 내려받아 빌드합니다. Node.js, Rust, Xcode Command Line Tools가 필요합니다.
 
 ```bash
